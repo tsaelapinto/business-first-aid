@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: business-first-aid
+    runtime: node
+    plan: starter
+    buildCommand: npm ci && npx prisma generate && npm run build
+    startCommand: npx prisma migrate deploy && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: DATABASE_URL
+        value: file:/var/data/prod.db
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1
+    # Custom domains — add these in the Render dashboard after first deploy:
+    #   www.harelitos.com   → front-office (triage + results)
+    #   admin.harelitos.com → back-office (/backoffice)
+    # Both point to this single service.

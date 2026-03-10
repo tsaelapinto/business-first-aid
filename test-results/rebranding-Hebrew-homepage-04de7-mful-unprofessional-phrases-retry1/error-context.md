@@ -1,0 +1,86 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - navigation [ref=e3]:
+      - generic [ref=e4]:
+        - link "+ עזרה ראשונה לעסקים" [ref=e5] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e6]: +
+          - generic [ref=e7]: עזרה ראשונה לעסקים
+        - generic [ref=e8]:
+          - link "קבל עזרה" [ref=e9] [cursor=pointer]:
+            - /url: /triage
+          - link "ניהול" [ref=e10] [cursor=pointer]:
+            - /url: /backoffice
+          - button "Switch language" [active] [ref=e11]: EN
+    - generic [ref=e12]:
+      - generic [ref=e13]: תמיכה בעסקים ישראליים בשעת משבר
+      - heading "העסק שלך סובל. בואו נטפל בזה — מהר." [level=1] [ref=e15]:
+        - text: העסק שלך סובל.
+        - text: בואו נטפל בזה — מהר.
+      - paragraph [ref=e16]: עזרה ראשונה לעסקים מאבחנת מה בדיוק פוגע בעסק שלך, מסווגת את המשבר ומפנה אותך לתמיכת המומחים הנכונה. ללא המתנה. ללא ניחושים. רק צעדים ברורים.
+      - generic [ref=e17]:
+        - link "התחל אבחון חינם" [ref=e18] [cursor=pointer]:
+          - /url: /triage
+        - link "לוח ניהול" [ref=e19] [cursor=pointer]:
+          - /url: /backoffice
+    - generic [ref=e21]:
+      - generic [ref=e22]:
+        - generic [ref=e23]: < 2 דק׳
+        - generic [ref=e24]: האבחון אורך פחות משתי דקות
+      - generic [ref=e25]:
+        - generic [ref=e26]: "5"
+        - generic [ref=e27]: שאלות אבחון
+      - generic [ref=e28]:
+        - generic [ref=e29]: "8"
+        - generic [ref=e30]: קטגוריות משבר
+      - generic [ref=e31]:
+        - generic [ref=e32]: "5"
+        - generic [ref=e33]: מסלולי תמיכת מומחים
+    - generic [ref=e34]:
+      - heading "איך זה עובד" [level=2] [ref=e35]
+      - generic [ref=e36]:
+        - generic [ref=e37]:
+          - generic [ref=e38]: "1"
+          - heading "ענה על 5 שאלות" [level=3] [ref=e39]
+          - paragraph [ref=e40]: ספר לנו מה כואב לעסק שלך. לוקח פחות מ-2 דקות.
+        - generic [ref=e41]:
+          - generic [ref=e42]: "2"
+          - heading "קבל את האבחנה שלך" [level=3] [ref=e43]
+          - paragraph [ref=e44]: אנחנו מסווגים את המשבר, מדרגים את החומרה ומייצרים פעולות מיידיות.
+        - generic [ref=e45]:
+          - generic [ref=e46]: "3"
+          - heading "התחבר למומחים" [level=3] [ref=e47]
+          - paragraph [ref=e48]: אתה מותאם למסלול התמיכה הנכון. מומחה יסקור את המקרה שלך.
+    - generic [ref=e49]:
+      - heading "מסלולי תמיכת מומחים" [level=2] [ref=e50]
+      - generic [ref=e51]:
+        - generic [ref=e52]:
+          - generic [ref=e53]: 💻
+          - generic [ref=e54]: Tech Expert
+          - generic [ref=e55]: Digital systems, e-commerce, automation
+        - generic [ref=e56]:
+          - generic [ref=e57]: 📣
+          - generic [ref=e58]: Campaign Manager
+          - generic [ref=e59]: Marketing, brand, demand recovery
+        - generic [ref=e60]:
+          - generic [ref=e61]: 🏢
+          - generic [ref=e62]: Business Manager
+          - generic [ref=e63]: Operations, staffing, planning
+        - generic [ref=e64]:
+          - generic [ref=e65]: 💰
+          - generic [ref=e66]: Finance Aid
+          - generic [ref=e67]: Cashflow, loans, emergency relief
+        - generic [ref=e68]:
+          - generic [ref=e69]: 🔀
+          - generic [ref=e70]: Multi-Disciplinary
+          - generic [ref=e71]: Complex cases requiring multiple experts
+    - generic [ref=e72]:
+      - heading "העסק שלך סובל. בואו נטפל בזה — מהר." [level=2] [ref=e73]
+      - paragraph [ref=e74]: עזרה ראשונה לעסקים מאבחנת מה בדיוק פוגע בעסק שלך, מסווגת את המשבר ומפנה אותך לתמיכת המומחים הנכונה. ללא המתנה. ללא ניחושים. רק צעדים ברורים.
+      - link "התחל אבחון חינם" [ref=e75] [cursor=pointer]:
+        - /url: /triage
+  - alert [ref=e76]
+```

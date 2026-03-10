@@ -1,0 +1,41 @@
+{
+  "name": "business-first-aid",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "db:migrate": "prisma migrate dev --name init",
+    "db:seed": "ts-node --project tsconfig.seed.json prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "seed": "ts-node --project tsconfig.seed.json prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.4.2",
+    "@prisma/client": "^7.4.2",
+    "pg": "^8.14.1",
+    "dotenv": "^17.3.1",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20.19.37",
+    "@types/pg": "^8.11.11",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "prisma": "^7.4.2",
+    "tailwindcss": "^4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5"
+  }
+}

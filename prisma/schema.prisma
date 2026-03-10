@@ -1,0 +1,44 @@
+// Business First Aid — Prisma Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model BusinessCase {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Identity
+  businessName String?
+  ownerName    String?
+  email        String?
+  phone        String?
+  industry     String?
+  location     String?
+
+  // Triage responses
+  q1MainProblem String
+  q2Severity    String
+  q3Changes     String
+  q4HelpNeeded  String
+  q5Urgency     String
+
+  // Classification outputs
+  severityScore    Int
+  categories       String
+  laneRecommended  String
+  diagnosisSummary String
+  immediateActions String
+
+  // Case management
+  status        String   @default("new")
+  priority      String   @default("normal")
+  assignedTo    String?
+  internalNotes String   @default("")
+  resolvedAt    DateTime?
+}
