@@ -13,7 +13,7 @@ export default function Navbar() {
     <nav className="border-b border-[var(--border)] bg-white sticky top-0 z-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-[var(--accent)] text-2xl font-black leading-none">+</span>
+          <span className="text-[var(--teal)] text-2xl font-black leading-none">+</span>
           <span className="font-bold text-[var(--foreground)] text-lg tracking-tight">
             {t("appName")}
           </span>
