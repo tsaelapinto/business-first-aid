@@ -26,7 +26,7 @@ export default function ResultsClient({ caseData: c }: ResultsClientProps) {
   const cats = isHe ? CRISIS_CATEGORIES_HE : CRISIS_CATEGORIES;
     
   const laneName = (lanes as any)[c.laneRecommended] ?? c.laneRecommended;
-  const translatedCategories = c.categories.map((cat: string) => (cats as any)[cat] ?? cat);
+  const translatedCategories = (c.categoriesList ?? []).map((cat: string) => (cats as any)[cat] ?? cat);
 
   return (
     <div className="min-h-screen" style={{ background: "var(--background)" }}>

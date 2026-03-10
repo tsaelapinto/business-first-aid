@@ -8,7 +8,7 @@ export default defineConfig({
   workers: 1,
   reporter: 'list',
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'https://business-first-aid.vercel.app',
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? 'https://businessaid.tsaela.com',
     headless: true,
     ...devices['Desktop Chrome'],
     actionTimeout: 30_000,
