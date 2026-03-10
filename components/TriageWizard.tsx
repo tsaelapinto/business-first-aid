@@ -18,14 +18,20 @@ type Answers = {
   location?: string;
 };
 
+type Props = {
+  initialAnswers?: Partial<Answers>;
+  chatSummary?: string;
+};
+
 const STEP_COUNT = TRIAGE_QUESTIONS.length + 1; // +1 for identity step
 
-export default function TriageWizard() {
+export default function TriageWizard({ initialAnswers, chatSummary }: Props = {}) {
   const router = useRouter();
   const { t, lang } = useI18n();
   const questions = lang === "he" ? TRIAGE_QUESTIONS_HE : TRIAGE_QUESTIONS;
-  const [step, setStep] = useState(0); // 0 = welcome / start
-  const [answers, setAnswers] = useState<Answers>({});
+  // If pre-populated from chat, jump straight to step 1 (skip welcome)
+  const [step, setStep] = useState(initialAnswers ? 1 : 0);
+  const [answers, setAnswers] = useState<Answers>(initialAnswers ?? {});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

@@ -16,7 +16,7 @@ const DEMO_BUSINESSES: Array<{
   answers: TriageAnswers;
 }> = [
   {
-    businessName: "Café Rimon — Tel Aviv",
+    businessName: "Cafe Rimon, Tel Aviv",
     ownerName: "Dafna Cohen",
     email: "dafna@caferimon.co.il",
     industry: "Food & Beverage",

@@ -1,0 +1,107 @@
+name: Deploy to Vercel + E2E Tests
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+  PROD_URL: https://businessaid.tsaela.com
+
+jobs:
+  # ── 1. Deploy to Vercel production ────────────────────────────────────────
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    outputs:
+      deployment_url: ${{ steps.deploy.outputs.deployment_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Deploy to production
+        id: deploy
+        run: |
+          DEPLOY_URL=$(vercel deploy --prod --token "$VERCEL_TOKEN" --yes 2>&1 | grep "https://" | tail -1)
+          echo "deployment_url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
+          echo "Deployed: $DEPLOY_URL"
+
+      - name: Wait for deployment to be live
+        run: |
+          echo "Waiting for $PROD_URL to respond..."
+          for i in $(seq 1 24); do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$PROD_URL")
+            if [ "$STATUS" = "200" ]; then
+              echo "Live! (attempt $i)"
+              exit 0
+            fi
+            echo "Attempt $i: HTTP $STATUS — waiting 10s..."
+            sleep 10
+          done
+          echo "Deployment did not become live within 4 minutes"
+          exit 1
+
+  # ── 2. Run Playwright E2E against production ──────────────────────────────
+  e2e:
+    name: E2E Tests (Playwright)
+    needs: deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests against production
+        run: npx playwright test --reporter=html,line
+        env:
+          PLAYWRIGHT_BASE_URL: ${{ env.PROD_URL }}
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
+
+    # ── Email on failure ─────────────────────────────────────────────────────
+      - name: Send failure email
+        if: failure()
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "[FAILED] Business First Aid | E2E tests failed after deploy"
+          to: ${{ secrets.ALERT_EMAIL }}
+          from: "Business First Aid CI <${{ secrets.MAIL_USERNAME }}>"
+          body: |
+            E2E tests failed after deploying to production.
+
+            Branch  : main
+            Commit  : ${{ github.sha }}
+            Message : ${{ github.event.head_commit.message }}
+            Run     : https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            Check the Playwright report in the run artifacts for details.
+
+            -- Business First Aid CI

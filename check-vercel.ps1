@@ -49,7 +49,7 @@ Write-Host ""
 Write-Host "RESULT" -ForegroundColor Cyan
 
 if ($localSHA -eq $prodSHA) {
-    Write-Host "  [PASS] master = production  ($($localSHA.Substring(0,12)))" -ForegroundColor Green
+    Write-Host "  [PASS] main = production  ($($localSHA.Substring(0,12)))" -ForegroundColor Green
     exit 0
 }
 
