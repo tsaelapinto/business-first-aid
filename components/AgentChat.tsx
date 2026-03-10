@@ -43,6 +43,7 @@ export default function AgentChat({ onComplete }: Props) {
   const [listening, setListening] = useState(false);
   const [streaming, setStreaming] = useState(false);
   const [inputText, setInputText] = useState("");
+  const messagesRef = useRef<ChatMessage[]>([]);
   const [messages, setMessages]   = useState<ChatMessage[]>([
     {
       role: "assistant",
@@ -52,6 +53,9 @@ export default function AgentChat({ onComplete }: Props) {
           : "Hi, I'm here to help. Tell me what's going on with your business, in your own words.",
     },
   ]);
+
+  // Keep ref in sync so sendMessage always sees current messages without stale closure
+  useEffect(() => { messagesRef.current = messages; }, [messages]);
 
   const speechSupported =
     typeof window !== "undefined" && "webkitSpeechRecognition" in window;
@@ -63,8 +67,9 @@ export default function AgentChat({ onComplete }: Props) {
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim() || streaming) return;
+      const currentMessages = messagesRef.current;
       const userMsg: ChatMessage = { role: "user", content: text };
-      const nextMessages: ChatMessage[] = [...messages, userMsg];
+      const nextMessages: ChatMessage[] = [...currentMessages, userMsg];
       setMessages(nextMessages);
       setInputText("");
       setStreaming(true);
@@ -80,6 +85,10 @@ export default function AgentChat({ onComplete }: Props) {
         });
 
         if (!res.body) throw new Error("No response body");
+        if (!res.ok) {
+          const errText = await res.text();
+          throw new Error(`API error ${res.status}: ${errText.slice(0, 200)}`);
+        }
         const reader  = res.body.getReader();
         const decoder = new TextDecoder();
         let accumulated = "";
@@ -125,7 +134,7 @@ export default function AgentChat({ onComplete }: Props) {
         setStreaming(false);
       }
     },
-    [messages, streaming, lang, onComplete]
+    [streaming, lang, onComplete]
   );
 
   function handleSubmit(e: React.FormEvent) {

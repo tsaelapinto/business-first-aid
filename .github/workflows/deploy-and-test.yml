@@ -89,26 +89,8 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
-    # ── Email on failure ─────────────────────────────────────────────────────
-      - name: Send failure email
+    # ── Notify on failure (GitHub sends email automatically on CI failure) ──
+      - name: Annotate failure
         if: failure()
-        uses: dawidd6/action-send-mail@v3
-        with:
-          server_address: smtp.gmail.com
-          server_port: 587
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "[FAILED] Business First Aid | E2E tests failed after deploy"
-          to: ${{ secrets.ALERT_EMAIL }}
-          from: "Business First Aid CI <${{ secrets.MAIL_USERNAME }}>"
-          body: |
-            E2E tests failed after deploying to production.
-
-            Branch  : main
-            Commit  : ${{ github.sha }}
-            Message : ${{ github.event.head_commit.message }}
-            Run     : https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
-            Check the Playwright report in the run artifacts for details.
-
-            -- Business First Aid CI
+        run: |
+          echo "::error title=E2E Tests Failed::Playwright tests failed after deploy to production. See artifacts for report. Run: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"

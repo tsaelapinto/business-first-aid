@@ -1,7 +1,8 @@
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
 
-export const runtime = "edge";
+// Node.js runtime: 60s timeout vs edge's 10s — required for streaming GPT responses
+export const maxDuration = 60;
 
 const SYSTEM_PROMPT = `You are a warm, empathetic business advisor for "Business First Aid" — a service that helps Israeli businesses in crisis. 
 Your role is to have a short, supportive conversation with a business owner to understand their situation BEFORE they fill out a diagnostic form.
@@ -42,5 +43,11 @@ export async function POST(req: Request) {
     temperature: 0.7,
   });
 
-  return result.toTextStreamResponse();
+  return result.toTextStreamResponse({
+    headers: {
+      // Prevent any proxy/CDN from buffering — forces true streaming to browser
+      'X-Content-Type-Options': 'nosniff',
+      'Cache-Control': 'no-cache, no-transform',
+    },
+  });
 }
