@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { prisma } from "@/lib/prisma";
 import { runTriageEngine } from "@/lib/triage-engine";
 
 // Simple secret-key protection — set SEED_SECRET env var on Vercel
