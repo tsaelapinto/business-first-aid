@@ -75,46 +75,73 @@ test("A | skip chat, complete form, view results", async ({ page }) => {
   console.log("Results URL:", currentUrl);
   console.log("Body snippet:", bodyText.slice(0, 500));
   
-  await expect(page.getByText(/Crisis Report|Triage Complete/i)).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByText(/Severity/i)).toBeVisible();
-  await expect(page.getByText(/Immediate Actions/i)).toBeVisible();
+  // Results page has both a <p>Triage Complete</p> label and an <h1>... Crisis Report</h1>.
+  // Use .first() to avoid strict-mode violation when both match the regex.
+  await expect(page.getByText(/Crisis Report|Triage Complete/i).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/Severity/i).first()).toBeVisible();
+  await expect(page.getByText(/Immediate Actions/i).first()).toBeVisible();
 });
 
-// ─── Test B: chat with AI → auto-fills wizard → get results ──────────────────
+// ─── Test B: chat with AI (mocked) → wizard auto-fills → get results ─────────
 test("B | chat with AI, wizard auto-fills, view results", async ({ page }) => {
+  // Mock the /api/chat route so the test is deterministic and fast.
+  // The client reads a ReadableStream chunk-by-chunk; fulfilling with a plain
+  // text body delivers all chunks at once, which the accumulator handles fine.
+  const MOCK_TRIAGE_JSON = JSON.stringify({
+    main_problem: "cashflow",
+    severity: "critical",
+    changes: ["revenue_drop", "tourism_disappeared"],
+    help_needed: "finance_help",
+    urgency: "today",
+    stress_level: 5,
+    summary:
+      "A Tel Aviv bakery lost 70% of customers since the war, facing critical cashflow pressure and may not survive the month without urgent financial help.",
+  });
+  const MOCK_BODY =
+    "I understand — this sounds critical and I want to help you move fast.\n\n" +
+    "##TRIAGE_DATA##\n" +
+    MOCK_TRIAGE_JSON +
+    "\n##END##";
+
+  await page.route("**/api/chat", (route) => {
+    route.fulfill({
+      status: 200,
+      contentType: "text/plain; charset=utf-8",
+      body: MOCK_BODY,
+    });
+  });
+
   await page.goto("/triage");
   await page.waitForLoadState("networkidle");
 
-  // Chat UI must be visible
+  // Chat input must be visible
   await expect(
     page.getByPlaceholder("Type here or click the mic to speak")
   ).toBeVisible({ timeout: 15_000 });
 
-  // Send a message with enough context for the AI to extract in one turn
+  // Send message — the mock response returns immediately with TRIAGE_DATA
   await page
     .getByPlaceholder("Type here or click the mic to speak")
     .fill(
       "My bakery in Tel Aviv has lost 70% of customers since the war started. " +
-      "Revenue dropped sharply and cashflow is critical, we may not survive next month. " +
-      "I need financial help today, this is urgent."
+        "Revenue dropped sharply and cashflow is critical, we may not survive next month. " +
+        "I need financial help today, this is urgent."
     );
   await page.getByRole("button", { name: "Send" }).click();
 
-  // Wait for the AI to reply and trigger the extraction (wizard appears)
-  // The wizard renders when phase switches from "chat" to "triage"
-  // We look for the progress bar ("Step X of Y") which only shows when step >= 1
-  await expect(page.getByText(/Step \d+ of \d+/)).toBeVisible({
-    timeout: 90_000, // AI can be slow
+  // Phase switches "chat" → "triage" after 800 ms (see AgentChat setTimeout).
+  // Wizard renders at step 1 (pre-filled), so "Step 1 of N" appears.
+  await expect(page.getByText(/Step \d+ of \d+/).first()).toBeVisible({
+    timeout: 10_000,
   });
 
-  // Wizard starts at step 1 with pre-filled answers from AI
-  // Some answers may already be selected — advance through remaining steps
+  // AI pre-filled all 5 answers — advance through the wizard steps
   await advanceWizardFromAIFill(page);
 
   // Results page
   await page.waitForURL(/\/results\//, { timeout: 30_000 });
   await page.waitForLoadState("networkidle");
-  await expect(page.getByText(/Crisis Report|Triage Complete/i)).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText(/Crisis Report|Triage Complete/i).first()).toBeVisible({ timeout: 30_000 });
 });
 
 // ─── helper: advance wizard when it starts mid-flow from AI pre-fill ─────────
