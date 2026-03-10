@@ -88,19 +88,12 @@ export default function AgentChat({ onComplete }: Props) {
           const { done, value } = await reader.read();
           if (done) break;
           const chunk = decoder.decode(value, { stream: true });
-          for (const line of chunk.split("\n")) {
-            if (line.startsWith("0:")) {
-              try {
-                const delta: string = JSON.parse(line.slice(2));
-                accumulated += delta;
-                const visible = cleanContent(accumulated);
-                setMessages((prev) => [
-                  ...prev.slice(0, -1),
-                  { role: "assistant", content: visible || "..." },
-                ]);
-              } catch { /* ignore partial chunks */ }
-            }
-          }
+          accumulated += chunk;
+          const visible = cleanContent(accumulated);
+          setMessages((prev) => [
+            ...prev.slice(0, -1),
+            { role: "assistant", content: visible || "..." },
+          ]);
         }
 
         const finalClean = cleanContent(accumulated);
