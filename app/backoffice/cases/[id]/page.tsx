@@ -120,7 +120,7 @@ export default function CaseDetailPage() {
             {/* Categories */}
             <div className="card">
               <h3 className="font-bold text-sm text-[var(--foreground)] mb-3">Crisis Categories</h3>
-              <CategoryTags categories={c.categories} />
+              <CategoryTags categories={c.categoriesList} />
             </div>
 
             {/* Raw answers */}

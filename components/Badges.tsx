@@ -60,8 +60,8 @@ export function SeverityBar({ score }: { score: number }) {
   );
 }
 
-export function CategoryTags({ categories }: { categories: string }) {
-  const cats = categories ? categories.split(",").filter(Boolean) : [];
+export function CategoryTags({ categories }: { categories: string[] }) {
+  const cats = Array.isArray(categories) ? categories : [];
   return (
     <div className="flex flex-wrap gap-1">
       {cats.map((cat) => {
