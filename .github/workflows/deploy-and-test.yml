@@ -49,6 +49,13 @@ jobs:
           echo "Deployment did not become live within 4 minutes"
           exit 1
 
+      - name: Seed demo data
+        run: |
+          curl -s -X POST "$PROD_URL/api/seed" \
+            -H "x-seed-secret: ${{ secrets.SEED_SECRET }}" \
+            -H "Content-Type: application/json" | tee /tmp/seed-result.json
+          cat /tmp/seed-result.json | grep -q '"ok":true' && echo "Seed OK" || echo "Seed already done or failed (non-fatal)"
+
   # ── 2. Run Playwright E2E against production ──────────────────────────────
   e2e:
     name: E2E Tests (Playwright)
