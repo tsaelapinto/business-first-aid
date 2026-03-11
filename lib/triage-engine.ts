@@ -133,7 +133,7 @@ function buildDiagnosisSummary(answers: TriageAnswers, categories: CrisisCategor
   const catLabels = categories.slice(0, 3).map((c) => CATEGORY_LABELS[c]).join(", ");
 
   let urgencyNote = "";
-  if (answers.q5Urgency === "today") urgencyNote = " Help is needed urgently — today.";
+  if (answers.q5Urgency === "today") urgencyNote = " Help is needed urgently, today.";
   else if (answers.q5Urgency === "2_3_days") urgencyNote = " Help is needed within 2–3 days.";
 
   return (
@@ -179,7 +179,7 @@ const CATEGORY_ACTIONS: Record<CrisisCategory, string[]> = {
   ],
   marketing_effectiveness: [
     "Pause underperforming campaigns and reallocate budget",
-    "Audit your messaging — does it reflect the current reality?",
+    "Audit your messaging: does it reflect the current reality?",
     "Test one new channel or format suited to wartime consumer behaviour",
   ],
   digital_tech_gap: [

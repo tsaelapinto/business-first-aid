@@ -1,6 +1,6 @@
 /**
  * In-memory fallback data for production Vercel deployment.
- * SQLite is not available in Vercel serverless — this module
+ * SQLite is not available in Vercel serverless, so this module
  * provides the 6 seeded demo cases as static fallback data,
  * and an in-memory store for new triage submissions.
  */
@@ -15,7 +15,7 @@ const SEED_CASES: BusinessCase[] = [
     id: "cafe-rimon@example.co.il",
     createdAt: new Date("2026-03-08T09:00:00Z"),
     updatedAt: new Date("2026-03-08T09:00:00Z"),
-    businessName: "Café Rimon — Tel Aviv",
+    businessName: "Café Rimon | Tel Aviv",
     ownerName: "Dafna Cohen",
     email: "dafna@caferimon.co.il",
     phone: null,
@@ -66,7 +66,7 @@ const SEED_CASES: BusinessCase[] = [
     immediateActions: JSON.stringify([
       "Conduct an emergency review of your top 3 revenue sources",
       "Pause underperforming campaigns and reallocate budget",
-      "Audit your messaging — does it reflect the current reality?",
+      "Audit your messaging: does it reflect the current reality?",
     ]),
     status: "new",
     priority: "normal",
@@ -124,7 +124,7 @@ const SEED_CASES: BusinessCase[] = [
     categories: "leadership_overwhelm,operations_staffing,marketing_effectiveness",
     laneRecommended: "multi_disciplinary",
     diagnosisSummary:
-      "This business is experiencing moderate impact from overwhelming uncertainty. 3 changes identified — multi-faceted crisis.",
+      "This business is experiencing moderate impact from overwhelming uncertainty. 3 changes identified, multi-faceted crisis.",
     immediateActions: JSON.stringify([
       "Write down the top 3 most urgent business threats on paper",
       "Schedule a focused 2-hour planning session within 48 hours",
@@ -239,4 +239,10 @@ export function mockUpdateCase(
   const updated = { ...existing, ...patch, updatedAt: new Date() };
   IN_MEMORY_CASES.set(id, updated);
   return updated;
+}
+
+export function mockDeleteCase(id: string): boolean {
+  // Never delete the static seed cases
+  if (SEED_CASES.some((c) => c.id === id)) return false;
+  return IN_MEMORY_CASES.delete(id);
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { mockGetCase, mockUpdateCase } from "@/lib/mock-data";
+import { mockGetCase, mockUpdateCase, mockDeleteCase } from "@/lib/mock-data";
 
 export async function GET(
   _req: NextRequest,
@@ -47,6 +47,32 @@ export async function PATCH(
     return NextResponse.json(updated);
   } catch (err) {
     console.error("Case PATCH error:", err);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
+
+  // Require the SEED_SECRET header to prevent accidental or malicious deletes
+  const secret = req.headers.get("x-seed-secret");
+  if (!secret || secret !== process.env.SEED_SECRET) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    try {
+      await prisma.businessCase.delete({ where: { id } });
+    } catch {
+      const deleted = mockDeleteCase(id);
+      if (!deleted) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+    return NextResponse.json({ deleted: true });
+  } catch (err) {
+    console.error("Case DELETE error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

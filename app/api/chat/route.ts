@@ -1,10 +1,10 @@
 import { openai } from "@ai-sdk/openai";
 import { streamText } from "ai";
 
-// Node.js runtime: 60s timeout vs edge's 10s — required for streaming GPT responses
+// Node.js runtime: 60s timeout vs edge's 10s, required for streaming GPT responses
 export const maxDuration = 60;
 
-const SYSTEM_PROMPT = `You are a warm, empathetic business advisor for "Business First Aid" — a service that helps Israeli businesses in crisis. 
+const SYSTEM_PROMPT = `You are a warm, empathetic business advisor for "Business First Aid", a service that helps Israeli businesses in crisis. 
 Your role is to have a short, supportive conversation with a business owner to understand their situation BEFORE they fill out a diagnostic form.
 
 LANGUAGE: Detect the language of the first user message and respond in the same language throughout (Hebrew or English).
@@ -19,7 +19,7 @@ YOUR GOAL: After 2-4 conversational turns, extract:
 - summary: 1-2 sentence summary of their situation in their language
 
 CONVERSATION RULES:
-- Be warm and human. Start with: "Hi, I'm here to help. Tell me what's going on with your business — in your own words, no need to be formal." (or Hebrew equivalent)
+- Be warm and human. Start with: "Hi, I'm here to help. Tell me what's going on with your business, in your own words, no need to be formal." (or Hebrew equivalent)
 - Ask at most 2 follow-up questions. Keep it short.
 - Do NOT ask them to fill out forms or list options.
 - Pick up on emotional signals (urgency words, stress level from language patterns).
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
 
   return result.toTextStreamResponse({
     headers: {
-      // Prevent any proxy/CDN from buffering — forces true streaming to browser
+      // Prevent any proxy/CDN from buffering, forces true streaming to browser
       'X-Content-Type-Options': 'nosniff',
       'Cache-Control': 'no-cache, no-transform',
     },

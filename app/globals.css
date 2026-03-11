@@ -114,8 +114,13 @@ body {
   align-items: center;
 }
 @media (max-width: 768px) {
-  .hero-inner      { grid-template-columns: 1fr; padding: 3rem 1.25rem 2rem; gap: 2.5rem; }
-  .hero-image-wrap { display: none; }
+  .hero-inner      { grid-template-columns: 1fr; padding: 3rem 1.25rem 2rem; gap: 2rem; }
+  /* Keep image visible on mobile, stack below the copy */
+  .hero-image-wrap { order: -1; }
+  .doctor-frame    { border-radius: 1.25rem; max-width: 420px; margin: 0 auto; }
+  /* Hide the floating stat badges on small screens (they clip out-of-bounds) */
+  .stat-float      { display: none; }
+  .anim-float      { animation: none; }
 }
 
 .er-badge {

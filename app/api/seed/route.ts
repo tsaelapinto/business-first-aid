@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { runTriageEngine } from "@/lib/triage-engine";
 
-// Simple secret-key protection — set SEED_SECRET env var on Vercel
+// Simple secret-key protection, set SEED_SECRET env var on Vercel
 const SEED_SECRET = process.env.SEED_SECRET ?? "dev-seed-only";
 
 const DEMO_BUSINESSES = [

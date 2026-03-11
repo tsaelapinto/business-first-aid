@@ -1,13 +1,59 @@
 /**
  * E2E: Full customer journey
  *
- * Test A: Skip chat → fill wizard manually → get results
- * Test B: Chat with AI → wizard auto-fills → get results
+ * Test A: Skip chat, fill wizard manually, get results
+ * Test B: Chat with AI (mocked), wizard auto-fills, get results
+ * Test C: Real AI chat endpoint smoke test (no mock, validates prod AI is alive)
  *
- * Both tests run against: https://businessaid.tsaela.com (production)
+ * All tests run against: https://businessaid.tsaela.com (production)
+ *
+ * Cleanup: after all tests, every case created during this run is deleted via
+ * the DELETE /api/cases/:id endpoint (requires x-seed-secret header).
+ * SEED_SECRET is read from .env.local (locally) or process.env (CI).
  */
 
 import { test, expect, Page } from "@playwright/test";
+import { readFileSync } from "fs";
+import { join } from "path";
+
+// ─── Track IDs of cases created during this run so we can clean up after ─────
+const testCaseIds: string[] = [];
+
+// ─── Read SEED_SECRET from .env.local or environment ─────────────────────────
+function readSeedSecret(): string {
+  if (process.env.SEED_SECRET) return process.env.SEED_SECRET;
+  try {
+    const content = readFileSync(join(process.cwd(), ".env.local"), "utf-8");
+    return content.match(/SEED_SECRET=([^\r\n]+)/)?.[1] ?? "";
+  } catch {
+    return "";
+  }
+}
+
+// ─── Extract and record the case ID from a results page URL ──────────────────
+function captureCaseId(url: string): void {
+  const match = url.match(/\/results\/([^/?#]+)/);
+  if (match) testCaseIds.push(match[1]);
+}
+
+// ─── Teardown: delete every case created during this run ──────────────────────
+test.afterAll(async () => {
+  if (testCaseIds.length === 0) return;
+  const secret = readSeedSecret();
+  const base = process.env.PLAYWRIGHT_BASE_URL ?? "https://businessaid.tsaela.com";
+  for (const id of testCaseIds) {
+    try {
+      await fetch(`${base}/api/cases/${id}`, {
+        method: "DELETE",
+        headers: { "x-seed-secret": secret },
+      });
+      console.log("Deleted test case:", id);
+    } catch {
+      // Best-effort, do not fail the run
+    }
+  }
+  testCaseIds.length = 0;
+});
 
 // ─── helper: complete the 5-question wizard + identity step ──────────────────
 async function completeWizard(page: Page) {
@@ -68,15 +114,16 @@ test("A | skip chat, complete form, view results", async ({ page }) => {
   // Results page
   await page.waitForURL(/\/results\//, { timeout: 30_000 });
   await page.waitForLoadState("networkidle");
-  
-  // Capture diagnostics if assertion fails
-  const currentUrl = page.url();
+
+  // Record case ID for cleanup
+  captureCaseId(page.url());
+
+  // Diagnostic log
   const bodyText = await page.locator("body").innerText().catch(() => "(no body text)");
-  console.log("Results URL:", currentUrl);
-  console.log("Body snippet:", bodyText.slice(0, 500));
-  
-  // Results page has both a <p>Triage Complete</p> label and an <h1>... Crisis Report</h1>.
-  // Use .first() to avoid strict-mode violation when both match the regex.
+  console.log("Results URL:", page.url());
+  console.log("Body snippet:", bodyText.slice(0, 300));
+
+  // Verify results page content (two matching elements exist, use .first())
   await expect(page.getByText(/Crisis Report|Triage Complete/i).first()).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText(/Severity/i).first()).toBeVisible();
   await expect(page.getByText(/Immediate Actions/i).first()).toBeVisible();
@@ -98,7 +145,7 @@ test("B | chat with AI, wizard auto-fills, view results", async ({ page }) => {
       "A Tel Aviv bakery lost 70% of customers since the war, facing critical cashflow pressure and may not survive the month without urgent financial help.",
   });
   const MOCK_BODY =
-    "I understand — this sounds critical and I want to help you move fast.\n\n" +
+    "I understand, this sounds critical and I want to help you move fast.\n\n" +
     "##TRIAGE_DATA##\n" +
     MOCK_TRIAGE_JSON +
     "\n##END##";
@@ -119,7 +166,7 @@ test("B | chat with AI, wizard auto-fills, view results", async ({ page }) => {
     page.getByPlaceholder("Type here or click the mic to speak")
   ).toBeVisible({ timeout: 15_000 });
 
-  // Send message — the mock response returns immediately with TRIAGE_DATA
+  // Send message, the mock response returns immediately with TRIAGE_DATA
   await page
     .getByPlaceholder("Type here or click the mic to speak")
     .fill(
@@ -135,13 +182,40 @@ test("B | chat with AI, wizard auto-fills, view results", async ({ page }) => {
     timeout: 10_000,
   });
 
-  // AI pre-filled all 5 answers — advance through the wizard steps
+  // AI pre-filled all 5 answers, advance through the wizard steps
   await advanceWizardFromAIFill(page);
 
   // Results page
   await page.waitForURL(/\/results\//, { timeout: 30_000 });
   await page.waitForLoadState("networkidle");
+  captureCaseId(page.url());
   await expect(page.getByText(/Crisis Report|Triage Complete/i).first()).toBeVisible({ timeout: 30_000 });
+});
+
+// ─── Test C: real AI endpoint smoke test (no mock) ────────────────────────────
+test("C | real AI chat endpoint returns a response", async ({ page }) => {
+  // Calls the real /api/chat with a single message.
+  // Verifies the endpoint is reachable and returns non-empty text.
+  // Catches: missing OPENAI_API_KEY, edge runtime timeout, route crashes.
+  const response = await page.request.post("/api/chat", {
+    headers: { "Content-Type": "application/json" },
+    data: {
+      messages: [
+        {
+          role: "user",
+          content:
+            "My restaurant in Haifa lost most customers. Revenue is down 60% and cashflow is critical. I need help urgently.",
+        },
+      ],
+    },
+    timeout: 60_000,
+  });
+
+  expect(response.ok(), `AI endpoint returned ${response.status()}`).toBeTruthy();
+  const text = await response.text();
+  console.log("AI endpoint status:", response.status());
+  console.log("AI response (first 300 chars):", text.slice(0, 300));
+  expect(text.length, "AI returned empty response").toBeGreaterThan(10);
 });
 
 // ─── helper: advance wizard when it starts mid-flow from AI pre-fill ─────────
