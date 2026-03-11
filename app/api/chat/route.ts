@@ -1,5 +1,4 @@
-import { openai } from "@ai-sdk/openai";
-import { streamText } from "ai";
+import OpenAI from "openai";
 
 // Node.js runtime: 60s timeout vs edge's 10s, required for streaming GPT responses
 export const maxDuration = 60;
@@ -32,6 +31,8 @@ WHEN READY TO PROCEED, end your final message with exactly this block (on a new 
 
 Do NOT include the ##TRIAGE_DATA## block in any message except the final one.`;
 
+const openaiClient = new OpenAI();
+
 export async function POST(req: Request) {
   // Fast-fail if the env var is missing so errors are visible, not silent
   if (!process.env.OPENAI_API_KEY) {
@@ -41,29 +42,30 @@ export async function POST(req: Request) {
   }
 
   const { messages } = await req.json();
-
   const encoder = new TextEncoder();
 
-  // Manual ReadableStream so any OpenAI error surfaces in the response body
-  // instead of being silently swallowed by toTextStreamResponse().
+  // Use the raw OpenAI SDK with streaming, bypassing the AI SDK wrapper.
+  // Errors from the OpenAI API are surfaced in the response body.
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const result = streamText({
-          model: openai("gpt-4o-mini"),
-          system: SYSTEM_PROMPT,
-          messages,
-          maxOutputTokens: 500,
+        const completion = await openaiClient.chat.completions.create({
+          model: "gpt-4o-mini",
+          messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+          max_tokens: 500,
           temperature: 0.7,
+          stream: true,
         });
 
-        for await (const chunk of result.textStream) {
-          controller.enqueue(encoder.encode(chunk));
+        for await (const chunk of completion) {
+          const text = chunk.choices[0]?.delta?.content ?? "";
+          if (text) controller.enqueue(encoder.encode(text));
         }
       } catch (err) {
         console.error("[chat stream error]", err);
-        // Write the error into the stream so the client can show it
-        controller.enqueue(encoder.encode(`\n[Server error: ${String(err)}]`));
+        controller.enqueue(
+          encoder.encode(`\n[Server error: ${String(err)}]`)
+        );
       } finally {
         controller.close();
       }
