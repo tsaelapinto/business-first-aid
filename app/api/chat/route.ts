@@ -33,21 +33,48 @@ WHEN READY TO PROCEED, end your final message with exactly this block (on a new 
 Do NOT include the ##TRIAGE_DATA## block in any message except the final one.`;
 
 export async function POST(req: Request) {
+  // Fast-fail if the env var is missing so errors are visible, not silent
+  if (!process.env.OPENAI_API_KEY) {
+    return new Response("OPENAI_API_KEY is not configured on this deployment", {
+      status: 500,
+    });
+  }
+
   const { messages } = await req.json();
 
-  const result = streamText({
-    model: openai("gpt-4o-mini"),
-    system: SYSTEM_PROMPT,
-    messages,
-    maxOutputTokens: 500,
-    temperature: 0.7,
+  const encoder = new TextEncoder();
+
+  // Manual ReadableStream so any OpenAI error surfaces in the response body
+  // instead of being silently swallowed by toTextStreamResponse().
+  const stream = new ReadableStream({
+    async start(controller) {
+      try {
+        const result = streamText({
+          model: openai("gpt-4o-mini"),
+          system: SYSTEM_PROMPT,
+          messages,
+          maxOutputTokens: 500,
+          temperature: 0.7,
+        });
+
+        for await (const chunk of result.textStream) {
+          controller.enqueue(encoder.encode(chunk));
+        }
+      } catch (err) {
+        console.error("[chat stream error]", err);
+        // Write the error into the stream so the client can show it
+        controller.enqueue(encoder.encode(`\n[Server error: ${String(err)}]`));
+      } finally {
+        controller.close();
+      }
+    },
   });
 
-  return result.toTextStreamResponse({
+  return new Response(stream, {
     headers: {
-      // Prevent any proxy/CDN from buffering, forces true streaming to browser
-      'X-Content-Type-Options': 'nosniff',
-      'Cache-Control': 'no-cache, no-transform',
+      "Content-Type": "text/plain; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      "X-Content-Type-Options": "nosniff",
     },
   });
 }
