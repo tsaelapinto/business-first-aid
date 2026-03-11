@@ -106,6 +106,27 @@ export default function AgentChat({ onComplete }: Props) {
         }
 
         const finalClean = cleanContent(accumulated);
+
+        // Detect server-side errors written into the stream body
+        if (finalClean.includes("[Server error:")) {
+          const isQuotaErr = finalClean.includes("429") || finalClean.toLowerCase().includes("quota");
+          setMessages((prev) => [
+            ...prev.slice(0, -1),
+            {
+              role: "assistant",
+              content: isQuotaErr
+                ? (lang === "he"
+                  ? "הצ'אט אינו זמין כרגע בשל מגבלת שירות. אנא מלאו את הטופס ידנית."
+                  : "The AI chat is temporarily unavailable. Please use the form below instead.")
+                : (lang === "he"
+                  ? "שגיאת שרת. אנא נסו שנית או מלאו את הטופס ידנית."
+                  : "A server error occurred. Please try again or fill the form manually."),
+            },
+          ]);
+          setStreaming(false);
+          return;
+        }
+
         setMessages((prev) => [
           ...prev.slice(0, -1),
           { role: "assistant", content: finalClean },
