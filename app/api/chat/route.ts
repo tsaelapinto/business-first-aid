@@ -1,7 +1,14 @@
 import OpenAI from "openai";
 
-// Node.js runtime: 60s timeout vs edge's 10s, required for streaming GPT responses
+// Node.js runtime: 60s timeout vs edge's 10s, required for streaming LLM responses
 export const maxDuration = 60;
+
+// Groq is OpenAI-compatible so we reuse the openai npm package with a custom baseURL.
+// Free tier: ~14,400 req/day. Get a free key at https://console.groq.com/keys
+const groqClient = new OpenAI({
+  apiKey: process.env.GROQ_API_KEY,
+  baseURL: "https://api.groq.com/openai/v1",
+});
 
 const SYSTEM_PROMPT = `You are a warm, empathetic business advisor for "Business First Aid", a service that helps Israeli businesses in crisis. 
 Your role is to have a short, supportive conversation with a business owner to understand their situation BEFORE they fill out a diagnostic form.
@@ -31,12 +38,12 @@ WHEN READY TO PROCEED, end your final message with exactly this block (on a new 
 
 Do NOT include the ##TRIAGE_DATA## block in any message except the final one.`;
 
-const openaiClient = new OpenAI();
+
 
 export async function POST(req: Request) {
-  // Fast-fail if the env var is missing so errors are visible, not silent
-  if (!process.env.OPENAI_API_KEY) {
-    return new Response("OPENAI_API_KEY is not configured on this deployment", {
+  // Fast-fail if the key is missing so errors are visible, not silent
+  if (!process.env.GROQ_API_KEY) {
+    return new Response("GROQ_API_KEY is not configured. Get a free key at https://console.groq.com/keys", {
       status: 500,
     });
   }
@@ -49,8 +56,8 @@ export async function POST(req: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        const completion = await openaiClient.chat.completions.create({
-          model: "gpt-4o-mini",
+        const completion = await groqClient.chat.completions.create({
+          model: "llama-3.3-70b-versatile",
           messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
           max_tokens: 500,
           temperature: 0.7,
