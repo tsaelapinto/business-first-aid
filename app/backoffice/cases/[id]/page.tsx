@@ -11,20 +11,23 @@ import {
   SeverityBar,
   CategoryTags,
 } from "@/components/Badges";
-import { SUPPORT_LANES } from "@/data/questions";
+import { SUPPORT_LANES, SUPPORT_LANES_HE } from "@/data/questions";
 import Link from "next/link";
-
-const TRIAGE_Q_LABELS: Record<string, string> = {
-  q1MainProblem: "Main Problem",
-  q2Severity: "Severity",
-  q3Changes: "Changes Since War",
-  q4HelpNeeded: "Help Needed",
-  q5Urgency: "Urgency",
-};
+import { useI18n } from "@/components/I18nProvider";
 
 export default function CaseDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { t, lang } = useI18n();
+  const dir = lang === "he" ? "rtl" : "ltr";
+  const lanes = lang === "he" ? SUPPORT_LANES_HE : SUPPORT_LANES;
+  const TRIAGE_Q_LABELS: Record<string, string> = {
+    q1MainProblem: t("triageQMain"),
+    q2Severity: t("triageQSeverity"),
+    q3Changes: t("triageQChanges"),
+    q4HelpNeeded: t("triageQHelp"),
+    q5Urgency: t("triageQUrgency"),
+  };
   const [raw, setRaw] = useState<BusinessCase | null>(null);
   const [status, setStatus] = useState("");
   const [priority, setPriority] = useState("");
@@ -60,24 +63,24 @@ export default function CaseDetailPage() {
   if (!raw) {
     return (
       <div className="min-h-screen flex items-center justify-center text-[var(--muted)]">
-        Loading case…
+        {t("loadingCase")}
       </div>
     );
   }
 
   const c = parseCase(raw);
-  const laneName = SUPPORT_LANES[c.laneRecommended as keyof typeof SUPPORT_LANES] ?? c.laneRecommended;
+  const laneName = (lanes as any)[c.laneRecommended] ?? c.laneRecommended;
 
   return (
-    <div className="min-h-screen" style={{ background: "var(--background)" }}>
+    <div className="min-h-screen" style={{ background: "var(--background)" }} dir={dir}>
       <nav className="border-b border-[var(--border)] bg-white sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-16">
           <Link href="/" className="flex items-center gap-2">
             <span className="text-[var(--accent)] text-2xl font-black leading-none">+</span>
-            <span className="font-bold text-lg">Business First Aid</span>
+            <span className="font-bold text-lg">{t("appName")}</span>
           </Link>
           <Link href="/backoffice" className="text-sm text-[var(--muted)] hover:text-[var(--foreground)]">
-            ← Back to Dashboard
+            {t("backToDashboard")}
           </Link>
         </div>
       </nav>
@@ -88,7 +91,7 @@ export default function CaseDetailPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-2xl font-black text-[var(--foreground)]">
-              {c.businessName ?? "Unnamed Business"}
+              {c.businessName ?? t("unnamedBusiness")}
             </h1>
             <p className="text-[var(--muted)] text-sm mt-1">
               {c.ownerName} {c.email && `· ${c.email}`} {c.location && `· ${c.location}`}
@@ -106,26 +109,26 @@ export default function CaseDetailPage() {
 
             {/* Severity */}
             <div className="card">
-              <h3 className="font-bold text-sm text-[var(--foreground)] mb-3">Severity</h3>
+              <h3 className="font-bold text-sm text-[var(--foreground)] mb-3">{t("sectionSeverity")}</h3>
               <SeverityBar score={c.severityScore} />
             </div>
 
             {/* Lane */}
             <div className="card">
-              <h3 className="font-bold text-sm text-[var(--foreground)] mb-3">Recommended Lane</h3>
+              <h3 className="font-bold text-sm text-[var(--foreground)] mb-3">{t("sectionLane")}</h3>
               <LaneBadge lane={c.laneRecommended} />
               <p className="text-xs text-[var(--muted)] mt-2">{laneName}</p>
             </div>
 
             {/* Categories */}
             <div className="card">
-              <h3 className="font-bold text-sm text-[var(--foreground)] mb-3">Crisis Categories</h3>
+              <h3 className="font-bold text-sm text-[var(--foreground)] mb-3">{t("sectionCategories")}</h3>
               <CategoryTags categories={c.categoriesList} />
             </div>
 
             {/* Raw answers */}
             <div className="card">
-              <h3 className="font-bold text-sm text-[var(--foreground)] mb-3">Triage Responses</h3>
+              <h3 className="font-bold text-sm text-[var(--foreground)] mb-3">{t("sectionResponses")}</h3>
               <dl className="space-y-2 text-xs">
                 {Object.entries(TRIAGE_Q_LABELS).map(([key, label]) => {
                   let val = "";
@@ -150,13 +153,13 @@ export default function CaseDetailPage() {
 
             {/* Diagnosis */}
             <div className="card">
-              <h3 className="font-bold text-sm text-[var(--foreground)] mb-3">Diagnosis Summary</h3>
+              <h3 className="font-bold text-sm text-[var(--foreground)] mb-3">{t("sectionDiagnosis")}</h3>
               <p className="text-xs text-[var(--muted)] leading-relaxed">{c.diagnosisSummary}</p>
             </div>
 
             {/* Immediate actions */}
             <div className="card">
-              <h3 className="font-bold text-sm text-[var(--foreground)] mb-3">Immediate Actions</h3>
+              <h3 className="font-bold text-sm text-[var(--foreground)] mb-3">{t("sectionActions")}</h3>
               <ol className="space-y-2">
                 {c.immediateActionsList.map((action: string, i: number) => (
                   <li key={i} className="flex gap-2 items-start text-xs">
@@ -171,10 +174,10 @@ export default function CaseDetailPage() {
 
             {/* Case management */}
             <div className="card space-y-4">
-              <h3 className="font-bold text-sm text-[var(--foreground)]">Case Management</h3>
+              <h3 className="font-bold text-sm text-[var(--foreground)]">{t("sectionManagement")}</h3>
 
               <div>
-                <label className="block text-xs font-semibold text-[var(--muted)] mb-1">Status</label>
+                <label className="block text-xs font-semibold text-[var(--muted)] mb-1">{t("fieldStatus")}</label>
                 <select
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
@@ -187,7 +190,7 @@ export default function CaseDetailPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[var(--muted)] mb-1">Priority</label>
+                <label className="block text-xs font-semibold text-[var(--muted)] mb-1">{t("fieldPriority")}</label>
                 <select
                   value={priority}
                   onChange={(e) => setPriority(e.target.value)}
@@ -200,23 +203,23 @@ export default function CaseDetailPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[var(--muted)] mb-1">Assigned To</label>
+                <label className="block text-xs font-semibold text-[var(--muted)] mb-1">{t("fieldAssignedTo")}</label>
                 <input
                   type="text"
                   value={assignedTo}
                   onChange={(e) => setAssignedTo(e.target.value)}
-                  placeholder="Team member name"
+                  placeholder={t("fieldAssignedToPlaceholder")}
                   className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-white"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[var(--muted)] mb-1">Internal Notes</label>
+                <label className="block text-xs font-semibold text-[var(--muted)] mb-1">{t("fieldNotes")}</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={4}
-                  placeholder="Add notes for the team…"
+                  placeholder={t("fieldNotesPlaceholder")}
                   className="w-full border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-white resize-none"
                 />
               </div>
@@ -226,7 +229,7 @@ export default function CaseDetailPage() {
                 disabled={saving}
                 className="btn-primary w-full disabled:opacity-70"
               >
-                {saving ? "Saving…" : saved ? "✓ Saved" : "Save Changes"}
+                {saving ? t("savingBtn") : saved ? t("savedBtn") : t("saveChanges")}
               </button>
             </div>
           </div>

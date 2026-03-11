@@ -113,7 +113,7 @@ export default function ResultsClient({ caseData: c }: ResultsClientProps) {
               ))}
             </ol>
           ) : (
-            <p className="text-sm text-[var(--muted)]">No immediate actions generated.</p>
+            <p className="text-sm text-[var(--muted)]">{t("noImmediateActions")}</p>
           )}
         </div>
 
@@ -123,7 +123,7 @@ export default function ResultsClient({ caseData: c }: ResultsClientProps) {
             {t("startNew")}
           </Link>
           <Link href="/" className="btn-primary text-center">
-            {isHe ? "חזרה לדף הבית" : "Return to Home"}
+            {t("returnHome")}
           </Link>
         </div>
 

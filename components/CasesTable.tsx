@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { BusinessCase } from "@prisma/client";
 import { PriorityBadge, StatusBadge, LaneBadge, SeverityBar } from "@/components/Badges";
+import { useI18n } from "@/components/I18nProvider";
 
 const PRIORITY_ORDER: Record<string, number> = { critical: 0, high: 1, normal: 2, low: 3 };
 
@@ -12,6 +13,8 @@ export default function CasesTable() {
   const [statusFilter, setStatusFilter] = useState("");
   const [laneFilter, setLaneFilter] = useState("");
   const [loading, setLoading] = useState(true);
+  const { t, lang } = useI18n();
+  const dir = lang === "he" ? "rtl" : "ltr";
 
   async function load() {
     setLoading(true);
@@ -36,14 +39,20 @@ export default function CasesTable() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={dir}>
+      {/* Dashboard heading */}
+      <div className="mb-2">
+        <h1 className="text-3xl font-black text-[var(--foreground)]">{t("backOfficeTitle")}</h1>
+        <p className="text-[var(--muted)] mt-1">{t("backOfficeSubtitle")}</p>
+      </div>
+
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
-          { label: "Total Cases", value: stats.total, color: "text-[var(--foreground)]" },
-          { label: "Critical", value: stats.critical, color: "text-[var(--accent)]" },
-          { label: "New / Unreviewed", value: stats.new, color: "text-amber-600" },
-          { label: "In Review", value: stats.inReview, color: "text-blue-600" },
+          { label: t("statTotalCases"), value: stats.total, color: "text-[var(--foreground)]" },
+          { label: t("statCritical"), value: stats.critical, color: "text-[var(--accent)]" },
+          { label: t("statNew"), value: stats.new, color: "text-amber-600" },
+          { label: t("statInReview"), value: stats.inReview, color: "text-blue-600" },
         ].map((s) => (
           <div key={s.label} className="card text-center">
             <div className={`text-3xl font-black ${s.color}`}>{s.value}</div>
@@ -59,7 +68,7 @@ export default function CasesTable() {
           onChange={(e) => setStatusFilter(e.target.value)}
           className="border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-white text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)]"
         >
-          <option value="">All Statuses</option>
+          <option value="">{t("allStatuses")}</option>
           {["new", "in-review", "assigned", "resolved", "closed"].map((s) => (
             <option key={s} value={s}>{s.replace("-", " ")}</option>
           ))}
@@ -69,7 +78,7 @@ export default function CasesTable() {
           onChange={(e) => setLaneFilter(e.target.value)}
           className="border border-[var(--border)] rounded-lg px-3 py-2 text-sm bg-white text-[var(--foreground)] focus:outline-none focus:border-[var(--accent)]"
         >
-          <option value="">All Lanes</option>
+          <option value="">{t("allLanes")}</option>
           {["tech_expert", "campaign_manager", "business_manager", "finance_aid", "multi_disciplinary"].map((l) => (
             <option key={l} value={l}>{l.replace(/_/g, " ")}</option>
           ))}
@@ -78,21 +87,21 @@ export default function CasesTable() {
           onClick={load}
           className="text-sm text-[var(--accent)] font-medium hover:underline"
         >
-          Refresh
+          {t("refreshBtn")}
         </button>
       </div>
 
       {/* Table */}
       {loading ? (
-        <div className="text-center py-12 text-[var(--muted)]">Loading cases…</div>
+        <div className="text-center py-12 text-[var(--muted)]">{t("loadingCases")}</div>
       ) : cases.length === 0 ? (
-        <div className="text-center py-12 text-[var(--muted)]">No cases found.</div>
+        <div className="text-center py-12 text-[var(--muted)]">{t("noCasesFound")}</div>
       ) : (
         <div className="card p-0 overflow-hidden">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-[var(--border)]">
               <tr>
-                {["Business", "Priority", "Status", "Lane", "Severity", "Date", ""].map((h) => (
+                {[t("colBusiness"), t("priorityLabel"), t("colStatus"), t("colLane"), t("colSeverity"), t("colDate"), ""].map((h) => (
                   <th key={h} className="text-left px-4 py-3 font-semibold text-[var(--muted)] text-xs">
                     {h}
                   </th>
@@ -107,7 +116,7 @@ export default function CasesTable() {
                       {c.businessName ?? "-"}
                     </div>
                     <div className="text-xs text-[var(--muted)]">
-                      {c.ownerName ?? "Unknown owner"}
+                      {c.ownerName ?? t("unknownOwner")}
                     </div>
                   </td>
                   <td className="px-4 py-3">
@@ -133,7 +142,7 @@ export default function CasesTable() {
                       href={`/backoffice/cases/${c.id}`}
                       className="text-[var(--accent)] font-medium hover:underline text-xs"
                     >
-                      View →
+                      {t("viewCase")}
                     </Link>
                   </td>
                 </tr>
